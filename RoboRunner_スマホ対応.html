@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+<!-- スマホ画面に合わせる -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<script type="text/javascript" src="parts.js"></script>
+<script type="text/javascript" src="map.js"></script>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+        background: #222;
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    #gameArea {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    #canvas {
+        display: block;
+        width: min(100vw, 640px);
+        height: auto;
+        max-height: 80vh;
+        object-fit: contain;
+        background: black;
+    }
+
+    #mobileControls {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .controlButton {
+        width: 100px;
+        height: 70px;
+        font-size: 40px;
+        font-weight: bold;
+        border: 2px solid white;
+        border-radius: 15px;
+        background: #444;
+        color: white;
+        touch-action: none;
+    }
+
+    .controlButton:active {
+        background: #777;
+    }
+
+    #startButton {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        padding: 18px 45px;
+        font-size: 28px;
+        font-weight: bold;
+        border: 0;
+        border-radius: 15px;
+        background: #ff9800;
+        color: white;
+    }
+
+    @media (min-width: 700px) {
+        #mobileControls {
+            display: none;
+        }
+    }
+</style>
+
+<script type="text/javascript">
+
+// ==================================================
+// ゲーム開始
+// ==================================================
+function start() {
+
+    // BGMを最初から再生する
+    const bgm = document.getElementById('bgm')
+    bgm.currentTime = 0
+    bgm.play().catch(function() {
+        // スマホではユーザー操作が必要な場合がある
+    })
+
+    timer = timerv
+    robotno = 1
+    robotd.x = 40
+    robotd.y = 210
+    oldtimer = timer
+    inryoku = 0
+
+    for (let i = 1; i < 8; i++) {
+        for (let j = 0; j < 16; j++) {
+            for (let k = 0; k < 12; k++) {
+                maps[i * 16 + j][k] = map1[j][k]
+            }
+        }
+    }
+
+    timerno = setInterval(mainloop, timer)
+
+    // スマホのSTARTボタンを消す
+    document.getElementById("startButton").style.display = "none"
+
+    // スマホ操作ボタンを表示
+    document.getElementById("mobileControls").style.display = "flex"
+}
+
+
+// ==================================================
+// BGM停止
+// ==================================================
+function stopBGM() {
+    const bgm = document.getElementById('bgm')
+    bgm.pause()
+    bgm.currentTime = 0
+}
+
+
+// ==================================================
+// キーを押し終えた時
+// ==================================================
+function keyUp(evt) {
+
+    if (mode === 0) {
+
+        if (evt.keyCode === 13) {
+            mode = 1
+            start()
+        }
+
+    } else if (mode === 1) {
+
+        if (evt.keyCode === 38) {
+            keyue = 0
+        }
+
+        if (evt.keyCode === 40) {
+            keyshita = 0
+        }
+    }
+}
+
+
+// ==================================================
+// キーを押した時
+// ==================================================
+function keyDown(evt) {
+
+    if (mode === 1) {
+
+        if (evt.keyCode === 38) {
+            keyue = 1
+            evt.preventDefault()
+        }
+
+        if (evt.keyCode === 40) {
+            keyshita = 1
+            evt.preventDefault()
+        }
+    }
+}
+
+
+// ==================================================
+// スマホのボタン操作
+// ==================================================
+function mobileUpStart(evt) {
+    evt.preventDefault()
+
+    if (mode === 0) {
+        mode = 1
+        start()
+        return
+    }
+
+    if (mode === 1) {
+        keyue = 1
+    }
+}
+
+function mobileUpEnd(evt) {
+    evt.preventDefault()
+    keyue = 0
+}
+
+function mobileDownStart(evt) {
+    evt.preventDefault()
+
+    if (mode === 1) {
+        keyshita = 1
+    }
+}
+
+function mobileDownEnd(evt) {
+    evt.preventDefault()
+    keyshita = 0
+}
+
+
+// ==================================================
+// 一定時間おきにやること
+// ==================================================
+function mainloop() {
+
+    if (mode === 1) {
+
+        counter++
+        haikeikaisi = counter * -ugokihaba * 0.5
+
+        if (counter > 1022) {
+
+            mode = 9
+            stopBGM()
+
+        } else {
+
+            if (-haikeikaisi > window1.sx && -haikeikaisi < window1.sx * 8) {
+
+                itemxy()
+                bonusscore(10)
+                speedupscore(50, 10)
+                speeddownscore(10, 10)
+                shogaicrash()
+            }
+
+            if (keyue === 1) {
+
+                robotd.y -= robots.move
+
+                if (robotd.y < 0) {
+                    robotd.y = 0
+                }
+
+                inryoku = 0
+
+            } else {
+
+                inryoku *= inryokus
+            }
+
+            if (keyshita === 1) {
+
+                robotd.y += robots.move
+
+                if (robotd.y + robots.sy > window1.sy) {
+                    robotd.y = window1.sy - robots.sy
+                }
+
+            } else {
+
+                robotd.y += inryoku
+
+                if (robotd.y + robots.sy > window1.sy) {
+                    robotd.y = window1.sy - robots.sy
+                }
+            }
+
+            if (timer !== oldtimer) {
+
+                clearInterval(timerno)
+                timerno = setInterval(mainloop, timer)
+                oldtimer = timer
+            }
+        }
+    }
+
+    draw()
+}
+
+
+// ==================================================
+// 画面を描く
+// ==================================================
+function draw() {
+
+    if (mode === 0) {
+
+        ctx.drawImage(base, 0, 0)
+
+        ctx.font = '72pt Arial'
+        ctx.fillStyle = 'Orange'
+        ctx.fillText('Robo Runner', 30, 150)
+
+        ctx.font = '26pt Arial'
+        ctx.fillText('Tap START', 220, 450)
+
+        for (let j = 0; j < 5; j++) {
+            for (let i = 0; i < 5; i++) {
+                if (i !== j) {
+                    ctx.drawImage(hazard, i * 40 + 220, j * 40 + 220)
+                }
+            }
+        }
+
+    } else if (mode === 1) {
+
+        ctx.drawImage(base, haikeikaisi, 0)
+
+        drawbonus()
+        drawbonusget()
+        drawspeedup()
+        drawspeeddown()
+        drawspeedupget()
+        drawshogai()
+
+        if (timer < timerv - 1) {
+            robotno = 2
+        } else if (timer > timerv + 1) {
+            robotno = 0
+        } else {
+            robotno = 1
+        }
+
+        ctx.drawImage(robot[robotno], robotd.x, robotd.y)
+
+    } else if (mode === 8) {
+
+        ctx.drawImage(base, haikeikaisi, 0)
+        drawshogai()
+        ctx.drawImage(burn, robotd.x, robotd.y)
+
+        ctx.font = '58pt Arial'
+        ctx.fillStyle = 'Red'
+        ctx.fillText('Game Over', 130, 230)
+
+        stopBGM()
+        clearInterval(timerno)
+
+    } else if (mode === 9) {
+
+        ctx.drawImage(base, haikeikaisi, 0)
+        ctx.drawImage(robot[robotno], robotd.x, robotd.y)
+
+        ctx.font = '72pt Arial'
+        ctx.fillStyle = 'Red'
+        ctx.fillText('GOAL !', 130, 150)
+
+        ctx.font = '30pt Arial'
+        ctx.drawImage(bonusitem, 200, 220, 30, 30)
+        ctx.fillText(' = ' + score, 265, 250)
+
+        ctx.drawImage(speedup, 200, 260, 30, 30)
+        ctx.drawImage(speeddown, 235, 260, 30, 30)
+        ctx.fillText(' = ' + itemscore, 265, 290)
+
+        ctx.fillText('Total  Score = ' + (score + itemscore), 130, 350)
+
+        stopBGM()
+        clearInterval(timerno)
+    }
+}
+
+
+// ==================================================
+// スマホ用ボタンの設定
+// ==================================================
+window.addEventListener("load", function() {
+
+    const startButton = document.getElementById("startButton")
+    const upButton = document.getElementById("upButton")
+    const downButton = document.getElementById("downButton")
+
+    // START
+    startButton.addEventListener("pointerdown", function(evt) {
+        evt.preventDefault()
+
+        if (mode === 0) {
+            mode = 1
+            start()
+        }
+    })
+
+    // 上
+    upButton.addEventListener("pointerdown", mobileUpStart)
+    upButton.addEventListener("pointerup", mobileUpEnd)
+    upButton.addEventListener("pointercancel", mobileUpEnd)
+    upButton.addEventListener("pointerleave", mobileUpEnd)
+
+    // 下
+    downButton.addEventListener("pointerdown", mobileDownStart)
+    downButton.addEventListener("pointerup", mobileDownEnd)
+    downButton.addEventListener("pointercancel", mobileDownEnd)
+    downButton.addEventListener("pointerleave", mobileDownEnd)
+
+    // パソコンのキーボード操作も残す
+    document.addEventListener("keydown", keyDown)
+    document.addEventListener("keyup", keyUp)
+})
+
+</script>
+</head>
+
+<body onload="init();">
+
+<div id="gameArea">
+
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <!-- スマホ操作ボタン -->
+    <div id="mobileControls" style="display:none;">
+        <button id="upButton" class="controlButton">▲</button>
+        <button id="downButton" class="controlButton">▼</button>
+    </div>
+
+</div>
+
+<!-- スマホ用ゲーム開始ボタン -->
+<button id="startButton">START</button>
+
+<img id="base" src="base.png" style="display:none" />
+<img class="robot" src="robot0.gif" style="display:none" />
+<img class="robot" src="robot1.gif" style="display:none" />
+<img class="robot" src="robot2.gif" style="display:none" />
+<img id="hazard" src="hazard.png" style="display:none" />
+<img id="bonusitem" src="bonusitem.gif" style="display:none" />
+<img id="bonusget" src="bonusget.gif" style="display:none" />
+<img id="speedup" src="speedup.gif" style="display:none" />
+<img id="itemget" src="itemget.gif" style="display:none" />
+<img id="speeddown" src="speeddown.gif" style="display:none" />
+<img id="burn" src="burn.gif" style="display:none" />
+
+<!-- BGM -->
+<audio id="bgm" src="bgm.mp3" loop></audio>
+
+</body>
+</html>
